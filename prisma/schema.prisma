@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(255)
+  cnpj      String   @unique @db.Char(14)
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  users     User[]
+  clients   Client[]
+  products  Product[]
+  orders    Order[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String       @id @default(uuid()) @db.Uuid
+  email          String       @unique @db.VarChar(255)
+  password       String       @db.Char(60)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  
+  // Clientes gerenciados por este usuário
+  clients        Client[]
+
+  @@map("users")
+}
+
+model Client {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String       @db.VarChar(255)
+  email          String       @unique @db.VarChar(255)
+  phone          String       @db.VarChar(20)
+  cnpj           String       @unique @db.Char(14)
+  status         ClientStatus @default(ACTIVE)
+  
+  // Soft Delete (BR-CRUD-03)
+  deletedAt      DateTime?    
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Isolamento de Dados (BR-CRUD-04)
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  // Gestor responsável (Preservação Histórica)
+  userId         String?      @db.Uuid
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Índices para otimização de busca B2B
+  @@index([organizationId, cnpj])
+  @@map("clients")
+}
+
+model Product {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String       @db.VarChar(255)
+  price          Decimal      @db.Decimal(10, 2)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, name])
+  @@map("products")
+}
+
+model Order {
+  id             String       @id @default(uuid()) @db.Uuid
+  total          Decimal      @db.Decimal(10, 2)
+  createdAt      DateTime     @default(now())
+
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("orders")
+}
+
+// Declaração da máquina de estados permitidos
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
