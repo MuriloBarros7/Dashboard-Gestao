@@ -4,7 +4,7 @@ import { verifyToken } from "./lib/auth";
 
 // 1. Definição das rotas do sistema
 const protectedRoutes = ["/dashboard"];
-const publicRoutes = ["/login", "/"];
+const publicRoutes = ["/login"]; // Removi a '/' daqui para ela ser tratada como regra de redirecionamento
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
@@ -18,27 +18,29 @@ export async function middleware(req: NextRequest) {
   // 2. Busca do Crachá (Cookie)
   const token = req.cookies.get("b2b_session")?.value;
 
-  // 3. Validação do Token (Usando a nossa função com 'jose')
+  // 3. Validação do Token
   const verifiedToken = token ? await verifyToken(token) : null;
 
+  // REGRA ESPECIAL: Redirecionar a raiz
+  if (path === "/") {
+    return NextResponse.redirect(
+      new URL(verifiedToken ? "/dashboard" : "/login", req.nextUrl),
+    );
+  }
+
   // 4. Regra 1: Sem acesso VIP
-  // Se a rota é protegida e o usuário não tem um token válido, manda pro login
   if (isProtectedRoute && !verifiedToken) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
   // 5. Regra 2: Já está dentro do prédio
-  // Se o usuário tem token válido e tenta acessar a tela de login, joga direto pro dashboard
   if (isPublicRoute && verifiedToken) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
-  // 6. Se passou pelas regras, deixa a requisição seguir o fluxo normal
   return NextResponse.next();
 }
 
-// 7. Otimização do Guarda
-// Dizemos ao Next.js para NÃO rodar esse guarda em arquivos estáticos (.png, .css, etc), poupando processamento.
 export const config = {
   matcher: [
     "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
