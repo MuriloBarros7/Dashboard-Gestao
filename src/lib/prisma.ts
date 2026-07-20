@@ -2,16 +2,19 @@ import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
-// Puxa a string de conexão das variáveis de ambiente
+// Puxa a string de conexão das variáveis de ambiente (.env)
 const connectionString = `${process.env.DATABASE_URL}`;
 
-// Cria o pool de conexão nativo do PostgreSQL
+// Cria o pool de conexão nativo do PostgreSQL via node-postgres
 const pool = new Pool({ connectionString });
 
-// Envolve o pool no adaptador do Prisma
+// Envolve o pool de conexão no adaptador oficial do Prisma
 const adapter = new PrismaPg(pool);
 
-// Injeta o adaptador no construtor do PrismaClient
+/**
+ * Instancia o PrismaClient injetando o adaptador PG nativo.
+ * Evita a multiplicação desnecessária de instâncias durante o Hot Reloading do Next.js.
+ */
 const prismaClientSingleton = () => {
   return new PrismaClient({ adapter });
 };

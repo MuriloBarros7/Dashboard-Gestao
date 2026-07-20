@@ -9,8 +9,7 @@ import {
   FormProvider,
   useFormContext,
 } from "react-hook-form";
-import { cn } from "../../lib/utils";
-import { Label } from "@radix-ui/react-label";
+import { cn } from "@/src/lib/utils";
 
 const Form = FormProvider;
 
@@ -22,6 +21,15 @@ const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue,
 );
 
+const FormFieldContext = React.createContext<{ name: string }>(
+  {} as { name: string },
+);
+
+/**
+ * Família de componentes e hooks para integração do React Hook Form com acessibilidade Radix UI.
+ * Fornece contexto unificado para associação automática de IDs, labels, mensagens de validação
+ * e estados de erro de campo em formulários reativos.
+ */
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -35,20 +43,16 @@ const FormField = <
   );
 };
 
-const FormFieldContext = React.createContext<{ name: string }>(
-  {} as { name: string },
-);
-
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
   const { getFieldState, formState } = useFormContext();
-  const fieldState = getFieldState(fieldContext.name, formState);
 
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>");
   }
 
+  const fieldState = getFieldState(fieldContext.name, formState);
   const { id } = itemContext;
 
   return {
@@ -80,9 +84,13 @@ const FormLabel = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const { error, formItemId } = useFormField();
   return (
-    <Label
+    <LabelPrimitive.Root
       ref={ref}
-      className={cn(error && "text-destructive", className)}
+      className={cn(
+        "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        error && "text-destructive",
+        className,
+      )}
       htmlFor={formItemId}
       {...props}
     />

@@ -2,6 +2,11 @@ import { ClientForm } from "@/src/components/forms/ClientForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+/**
+ * Server Component de página para cadastro de um novo cliente na organização.
+ * Estrutura o layout container com botão de navegação para retorno à listagem
+ * e renderiza o componente reutilizável 'ClientForm' em modo de criação (sem 'initialData').
+ */
 export default function NewClientPage() {
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">

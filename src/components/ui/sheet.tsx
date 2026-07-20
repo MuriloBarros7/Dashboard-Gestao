@@ -3,10 +3,16 @@
 import * as React from "react";
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 
-import { cn } from "../../lib/utils";
-import { Button } from "../ui/button";
-import { XIcon } from "lucide-react"; //ícones
+import { cn } from "@/src/lib/utils";
+import { Button } from "@/src/components/ui/button";
+import { XIcon } from "lucide-react";
 
+/**
+ * Componente UI de Gaveta Lateral Retrátil (Sheet/Drawer).
+ * Utiliza os primitivos de diálogo do Base UI para criar painéis sobrepostos
+ * com suporte a direções dinâmicas (top, right, bottom, left), backdrop translúcido
+ * e botão de fechamento com acessibilidade acoplada.
+ */
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }

@@ -30,8 +30,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files (Protege suas credenciais locais de banco de dados)
+.env
+.env.local
+.env.development
+.env.production
+.env.local
+*.env.local
 
 # vercel
 .vercel
@@ -40,4 +45,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/app/generated/prisma
+# prisma generated artifacts (Corrigido para a estrutura real com /src)
+/src/app/generated/prisma/

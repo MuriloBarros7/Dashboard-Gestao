@@ -1,8 +1,13 @@
 import * as React from "react";
 import { Input as InputPrimitive } from "@base-ui/react/input";
 
-import { cn } from "../../lib/utils";
+import { cn } from "@/src/lib/utils";
 
+/**
+ * Componente UI reutilizável para campos de entrada de texto (Input).
+ * Encapsula o primitivo Base UI aplicando estilos padronizados do ERP,
+ * estados de foco/desabilitação, tratamento de 'aria-invalid' e temas claro/escuro.
+ */
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <InputPrimitive

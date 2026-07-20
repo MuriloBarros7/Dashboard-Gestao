@@ -1,34 +1,41 @@
-import { getClientById } from "@/src/actions/client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/app/dashboard/clients/[id]/edit/page.tsx
+import prisma from "@/src/lib/prisma";
 import { ClientForm } from "@/src/components/forms/ClientForm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-// O params agora é uma Promise (Next.js 15+ convention)
 interface EditClientPageProps {
   params: Promise<{
     id: string;
   }>;
 }
 
+/**
+ * Server Component de página para edição dinâmica de dados do cliente por ID.
+ * Resolve a Promise dos parâmetros de rota do Next.js, realiza a busca direta
+ * no banco via Prisma para hidratar o formulário e gerencia o fallback de 'notFound()'
+ * caso o identificador fornecido na URL seja inválido ou inexistente.
+ */
 export default async function EditClientPage({ params }: EditClientPageProps) {
-  // 1. Desempacota o params com await
   const { id } = await params;
 
-  // 2. Busca os dados atuais do cliente direto no servidor
-  const client = await getClientById(id);
+  // Busca direta do registro no Prisma para evitar erros de declarações ausentes
+  const client = await (prisma as any).client.findUnique({
+    where: { id },
+  });
 
-  // 3. Se o cliente não existir ou for de outra empresa, devolve um 404
   if (!client) {
     notFound();
   }
 
-  // 4. Formata os dados para o formato exato que o formulário (Zod) espera
   const initialData = {
     name: client.name,
     cnpj: client.cnpj,
     email: client.email,
     phone: client.phone || "",
+    status: client.status as "ACTIVE" | "INACTIVE",
   };
 
   return (
@@ -51,7 +58,7 @@ export default async function EditClientPage({ params }: EditClientPageProps) {
         </div>
       </div>
 
-      {/* Renderiza o Formulário passando os dados e o ID */}
+      {/* Renderiza o Formulário passando os dados completos */}
       <div className="p-6 border rounded-lg bg-card shadow-sm">
         <ClientForm initialData={initialData} clientId={client.id} />
       </div>

@@ -1,112 +1,121 @@
-# Dashboard de Gestão Financeira B2B
+# ERP de Gestão Interna
 
-Plataforma corporativa de gestão para empresas de pequeno e médio porte. O sistema centraliza o controle de pedidos, produtos e clientes, permitindo gestão autônoma ou colaboração com consultores especializados, garantindo isolamento total de dados e segurança corporativa.
+Plataforma corporativa de gestão interna voltada para o controle operacional exclusivo da fábrica. O sistema centraliza o gerenciamento de estoque, catálogo de produtos, carteira de clientes corporativos, fluxo financeiro de caixa e o processo completo de faturamento de pedidos de venda, garantindo alta performance e centralização de dados.
 
 ---
 
 # Arquitetura e Modelagem
 
-O sistema adota uma arquitetura _Multi-tenancy_ (isolamento por locatário), onde cada empresa (Organização) possui seu próprio escopo de dados.
+O sistema adota uma arquitetura de **Gestão Interna Dedicada (Single-tenant)**, eliminando qualquer tipo de barreira multi-empresa ou isolamento dinâmico complexo por chaves organizacionais.
 
 ### Diagrama de Entidade-Relacionamento (Mermaid)
 
 ```mermaid
 erDiagram
-    ORGANIZATION ||--o{ USER : has
-    ORGANIZATION ||--o{ CLIENT : manages
-    ORGANIZATION ||--o{ PRODUCT : owns
-    ORGANIZATION ||--o{ ORDER : registers
-    USER ||--o{ CLIENT : assigns
+    USER ||--o{ CLIENT : owns
+    USER ||--o{ PRODUCT : owns
+    USER ||--o{ ORDER : owns
+    USER ||--o{ FINANCIAL_TRANSACTION : owns
+    USER ||--|| COMPANY_SETTINGS : configures
+    CLIENT ||--o{ ORDER : registers
+    PRODUCT ||--o{ ORDER_ITEM : contains
+    ORDER ||--o{ ORDER_ITEM : has
 
-    ORGANIZATION {
-        string id PK
-        string name
-        string cnpj
-    }
     USER {
         string id PK
         string email
-        string organizationId FK
+        string password
+        string name
+        timestamp createdAt
+        timestamp updatedAt
     }
     CLIENT {
         string id PK
-        string organizationId FK
-        string name
-        string email
-        string phone
-        string cnpj
-        string status
         string userId FK
+        string name
+        string cnpj
+        string phone
+        string email
+        string status
+        timestamp createdAt
+        timestamp updatedAt
     }
     PRODUCT {
         string id PK
-        string organizationId FK
+        string userId FK
         string name
         decimal price
+        int stock
+        timestamp createdAt
+        timestamp updatedAt
     }
     ORDER {
         string id PK
-        string organizationId FK
+        string userId FK
+        string clientId FK
         decimal total
+        string status
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    ORDER_ITEM {
+        string id PK
+        string orderId FK
+        string productId FK
+        int quantity
+        decimal price
+    }
+    COMPANY_SETTINGS {
+        string id PK
+        string userId FK
+        string companyName
+        string tradeName
+        string cnpj
+        string phone
+        string email
+        string address
+        timestamp updatedAt
+    }
+    FINANCIAL_TRANSACTION {
+        string id PK
+        string userId FK
+        string description
+        decimal amount
+        string type
+        string category
+        timestamp date
+        timestamp createdAt
     }
 ```
 
 # Decisões Técnicas (ADR)
 
-Segurança: Implementação de autenticação via JWT armazenado em Cookies HTTP-only (SameSite=Strict), mitigando ataques XSS.
+**Segurança:** Implementação de autenticação via JWT armazenado em Cookies HTTP-only (`SameSite=Strict`), mitigando de forma nativa ataques de injeção XSS.
 
-**Isolamento B2B:** Uso obrigatório de organizationId em todas as tabelas e queries (where: { organizationId: ... }), garantindo que dados de diferentes empresas jamais sejam cruzados.
+**Simplificação ERP:** Eliminação total do campo `organizationId` e do isolamento multi-tenant. O sistema opera sob o escopo exclusivo de uma única empresa, tornando o código mais leve e rápido.
 
-**Performance:** Validação de acesso realizada via Middleware (Edge) do Next.js, garantindo latência mínima ao interceptar rotas privadas.
+**Performance:** Validação de sessão e proteção de escopo privado executadas de forma centralizada via Middleware (Edge) do Next.js, garantindo latência mínima ao interceptar rotas restritas.
 
-**Integridade:** Senhas protegidas via Bcrypt (custo 10) e uso de Soft Delete (deletedAt) para preservação de histórico e auditoria conforme as Regras de Negócio estabelecidas.
+**Integridade Rígida:** Senhas protegidas via Bcrypt (fator de custo 10) e uso de deleção física em cascata (onDelete: Cascade) gerenciada pelo banco de dados para simplificar o ciclo de vida dos registros locais.
 
 # Pilares do Sistema
 
-**Gestão Colaborativa:** Conexão segura entre empresas e consultores/gestores externos.
+**Eficiência Produtiva:** Centralização completa do catálogo de produtos e do estoque físico da fábrica.
 
-**Segurança de Dados:** Arquitetura pensada para conformidade e sigilo comercial entre diferentes locatários.
+**Fidelidade Financeira:** Armazenamento estático do preço praticado no ato da venda (`OrderItem.price`), impedindo que flutuações futuras do catálogo corrompam o histórico de faturamento da empresa.
 
-**Foco B2B:** Interface intuitiva com métricas financeiras focadas em desempenho e produtividade operacional.
+**Foco Operacional:** Interface otimizada e limpa para emissão rápida de vendas e controle de expedição direto pela equipe interna.
 
 # Tecnologias Principais
 
 **Framework:** Next.js (App Router)
 
-**ORM:** Prisma
+**ORM:** Prisma (Configuração adaptada para o padrão do Prisma 7 via prisma.config.ts)
 
 **Banco de Dados:** PostgreSQL
 
 **Segurança:** Bcrypt, Jose (JWT), Next.js Middleware
 
-**UI:** Tailwind CSS, Radix UI (shadcn/ui)
-
-# Roadmap de Desenvolvimento
-
-[x] Configuração do Prisma (Modelagem do Schema corporativo).
-
-[x] Auth Layer (Implementação de Login/Logout e Middleware de proteção).
-
-**Nota:** O middleware.ts está temporariamente desativado em .bkp para permitir o roteamento fluido durante o desenvolvimento das telas.
-
-[ ] Gestão de Dados (CRUDs de Clientes, Produtos e Pedidos com filtro por organizationId).
-
-[x] Interface de Cadastro de Clientes (ClientForm).
-
-[x] Segurança lógica e sanitização de dados (Zod + Regex).
-
-[ ] Conexão da Server Action com o Prisma para persistência real no banco de dados.
-
-[ ] Tela de Listagem e Datatable de Clientes.
-
-[ ] Funcionalidades de Edição (Update) e Exclusão (Delete) de Clientes.
-
-[ ] CRUD de Produtos.
-
-[ ] CRUD de Pedidos.
-
-[ ] Módulo Analítico (Dashboard de KPIs e Exportação de relatórios).
-
-[ ] Módulo de Colaboração (Conexão e gestão de acessos entre Organização e Consultores).
+**UI:** Tailwind CSS, Radix UI (shadcn/ui), Lucide React
 
 Desenvolvido com foco em escalabilidade, segurança e excelência técnica.
