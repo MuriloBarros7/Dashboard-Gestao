@@ -65,7 +65,7 @@ export default function InactiveClientsPage() {
                     <th className="px-6 py-3">CNPJ</th>
                     <th className="px-6 py-3">E-mail Comercial</th>
                     <th className="px-6 py-3">Telefone</th>
-                    <th className="px-6 py-3">Status</th>{" "}
+                    <th className="px-6 py-3 rounded-r-md">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -74,9 +74,11 @@ export default function InactiveClientsPage() {
                       key={client.id}
                       className="hover:bg-muted/50 transition-colors"
                     >
-                      <td className="px-6 py-4 font-medium text-foreground flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                        {client.name}
+                      <td className="px-6 py-4 font-medium text-foreground">
+                        <span className="inline-flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                          {client.name}
+                        </span>
                       </td>
                       <td className="px-6 py-4 font-mono text-xs text-foreground">
                         {client.cnpj || "—"}

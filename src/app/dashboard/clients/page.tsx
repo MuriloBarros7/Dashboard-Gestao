@@ -291,9 +291,7 @@ export default function ClientsPage() {
 
             <div>
               <h3 className="text-lg font-semibold">
-                {editingClient
-                  ? "Editar Cadastro"
-                  : "Cadastrar Novo Cliente B2B"}
+                {editingClient ? "Editar Cadastro" : "Cadastrar Novo Cliente"}
               </h3>
             </div>
 

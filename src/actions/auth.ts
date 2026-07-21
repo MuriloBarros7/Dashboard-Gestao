@@ -4,6 +4,7 @@ import prisma from "@/src/lib/prisma";
 import { signToken } from "@/src/lib/auth";
 import * as bcrypt from "bcrypt";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 
 /**
  * Encerra a sessão ativa do usuário limpando o cookie de autenticação.
@@ -11,6 +12,7 @@ import { cookies } from "next/headers";
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete("b2b_session");
+  revalidatePath("/");
   return { success: true, message: "Sessão encerrada com sucesso." };
 }
 
@@ -55,6 +57,7 @@ export async function loginAction(formData: FormData) {
       path: "/",
     });
 
+    revalidatePath("/");
     return { success: true, message: "Login realizado com sucesso!" };
   } catch (error) {
     console.error("Erro no login:", error);
@@ -135,6 +138,7 @@ export async function registerAction(formData: FormData) {
       path: "/",
     });
 
+    revalidatePath("/dashboard");
     return {
       success: true,
       message: `Bem-vindo(a), ${displayName}! Conta criada com sucesso.`,

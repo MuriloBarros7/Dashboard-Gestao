@@ -138,7 +138,7 @@ export function Sidebar() {
               <hr className="my-2 border-slate-300" />
 
               <Link
-                href="/configuracoes"
+                href="/dashboard/configuracoes"
                 className="flex items-center gap-3 p-2 hover:bg-slate-300 rounded-md transition-colors"
               >
                 <Settings className="h-5 w-5" />

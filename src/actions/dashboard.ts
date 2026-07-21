@@ -27,14 +27,17 @@ export async function getDashboardMetrics() {
     // Executa todas as agregações em paralelo no banco local isoladas por usuário
     const [aggregateTotal, totalOrders, totalClients, lowStockProducts] =
       await (prisma as any).$transaction([
-        // 1. Soma o faturamento bruto real de todas as vendas do usuário
+        // 1. Soma o faturamento bruto real considerando APENAS os pedidos concluídos/faturados ('DELIVERED')
         (prisma.order as any).aggregate({
-          where: { userId: session.userId },
+          where: {
+            userId: session.userId,
+            status: "DELIVERED",
+          },
           _sum: {
             total: true,
           },
         }),
-        // 2. Conta o volume total de ordens de venda emitidas pelo usuário
+        // 2. Conta o volume total de ordens de venda emitidas pelo usuário (inclui em andamento)
         (prisma.order as any).count({
           where: { userId: session.userId },
         }),

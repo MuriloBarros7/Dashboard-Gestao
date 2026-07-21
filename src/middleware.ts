@@ -2,40 +2,42 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "./lib/auth";
 
-// 1. Definição das rotas do sistema
+/**
+ * Middleware global de segurança e controle de navegação da aplicação.
+ * Intercepta as requisições HTTP em tempo de execução para validar a presença e a integridade
+ * do cookie de sessão JWT ('b2b_session'). Gerencia o fluxo de autenticação redirecionando
+ * usuários não autenticados para a tela de login e impedindo que usuários logados
+ * acessem páginas públicas desnecessariamente.
+ */
+
 const protectedRoutes = ["/dashboard"];
-const publicRoutes = ["/login"]; // Removi a '/' daqui para ela ser tratada como regra de redirecionamento
+const publicRoutes = ["/login"];
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  // Verifica qual é o tipo da rota atual
+  // Busca o token de sessão
+  const token = req.cookies.get("b2b_session")?.value;
+  const verifiedToken = token ? await verifyToken(token) : null;
+
   const isProtectedRoute = protectedRoutes.some((route) =>
     path.startsWith(route),
   );
   const isPublicRoute = publicRoutes.includes(path);
 
-  // 2. Busca do Crachá (Cookie)
-  const token = req.cookies.get("b2b_session")?.value;
-
-  // 3. Validação do Token
-  const verifiedToken = token ? await verifyToken(token) : null;
-
-  // REGRA ESPECIAL: Redirecionar a raiz
-  if (path === "/") {
-    return NextResponse.redirect(
-      new URL(verifiedToken ? "/dashboard" : "/login", req.nextUrl),
-    );
+  // 1. Se acessar a Raiz "/" SEM estar logado -> vai para /login
+  if (path === "/" && !verifiedToken) {
+    return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
-  // 4. Regra 1: Sem acesso VIP
+  // 2. Tentar acessar rotas /dashboard SEM estar logado -> vai para /login
   if (isProtectedRoute && !verifiedToken) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
-  // 5. Regra 2: Já está dentro do prédio
+  // 3. Se estiver logado e tentar acessar /login -> manda para a raiz "/" (Hub de entrada)
   if (isPublicRoute && verifiedToken) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    return NextResponse.redirect(new URL("/", req.nextUrl));
   }
 
   return NextResponse.next();

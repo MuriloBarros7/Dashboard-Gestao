@@ -128,7 +128,7 @@ export default async function HomePage() {
 
           {/* Card 4: Configurações da Fábrica */}
           <Link
-            href="/configuracoes"
+            href="/dashboard/configuracoes"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md hover:border-slate-500/50 transition-all duration-200"
           >
             <div className="flex flex-col space-y-4">
